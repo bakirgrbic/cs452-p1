@@ -1,6 +1,15 @@
 #include "lab.h"
 #include <stdio.h>
 
+char *get_prompt(const char *env) {
+    // No need for malloc, getenv()'s returned pointer should not be modified.
+    char *prompt = getenv(env);
+    if (prompt == NULL) {
+        prompt = "shell>";
+    }
+    return prompt;
+}
+
 void parse_args(int argc, char **argv) {
     int opt;
 
