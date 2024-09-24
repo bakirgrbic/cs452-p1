@@ -21,6 +21,63 @@ char *get_prompt(const char *env) {
     return prompt;
 }
 
+int change_dir(char **dir) {
+    // TODO
+    return -1
+}
+
+char **cmd_parse(char const *line) {
+    // TODO
+    char **blah = ["a", "b"];
+    return blah;
+}
+
+void cmd_free(char ** line) {
+    // TODO
+}
+
+char *trim_white(char *line) {
+    int length = strlen(line);
+    int start = -1;
+    int end = 0;
+    for (int i = 0; i < length; i++) {
+        if (start == -1 && line[i] != ' ') {
+            start = i;
+        }
+        if (start != -1 && line[i] != ' ') {
+            end = i;
+        }
+    }
+    if (start != -1) { 
+        int i = 0;
+        while (start <= end) {
+            line[i] = line[start];
+            start++;
+            i++;
+        }
+        while (i < length) {
+            line[i] = '\0';
+            i++;
+        }
+    } else {
+        line[end] = '\0';
+    }
+
+    return line; 
+}
+
+bool do_builtin(struct shell *sh, char **argv) {
+    // TODO
+}
+
+void sh_init(struct shell *sh) {
+    // TODO
+}
+
+void sh_destroy(struct shell *sh) {
+    // TODO
+}
+
 void parse_args(int argc, char **argv) {
     int opt;
 

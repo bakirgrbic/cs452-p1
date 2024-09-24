@@ -53,7 +53,6 @@ void test_cmd_parse(void)
 
 void test_trim_white_no_whitespace(void)
 {
-     TEST_IGNORE_MESSAGE("TBD");
      char *line = (char*) calloc(10, sizeof(char));
      strncpy(line, "ls -a", 10);
      char *rval = trim_white(line);
@@ -63,7 +62,6 @@ void test_trim_white_no_whitespace(void)
 
 void test_trim_white_start_whitespace(void)
 {
-     TEST_IGNORE_MESSAGE("TBD");
      char *line = (char*) calloc(10, sizeof(char));
      strncpy(line, "  ls -a", 10);
      char *rval = trim_white(line);
@@ -73,7 +71,6 @@ void test_trim_white_start_whitespace(void)
 
 void test_trim_white_end_whitespace(void)
 {
-     TEST_IGNORE_MESSAGE("TBD");
      char *line = (char*) calloc(10, sizeof(char));
      strncpy(line, "ls -a  ", 10);
      char *rval = trim_white(line);
@@ -83,7 +80,6 @@ void test_trim_white_end_whitespace(void)
 
 void test_trim_white_both_whitespace_single(void)
 {
-     TEST_IGNORE_MESSAGE("TBD");
      char *line = (char*) calloc(10, sizeof(char));
      strncpy(line, " ls -a ", 10);
      char *rval = trim_white(line);
@@ -93,7 +89,6 @@ void test_trim_white_both_whitespace_single(void)
 
 void test_trim_white_both_whitespace_double(void)
 {
-     TEST_IGNORE_MESSAGE("TBD");
      char *line = (char*) calloc(10, sizeof(char));
      strncpy(line, "  ls -a  ", 10);
      char *rval = trim_white(line);
@@ -103,7 +98,6 @@ void test_trim_white_both_whitespace_double(void)
 
 void test_trim_white_all_whitespace(void)
 {
-     TEST_IGNORE_MESSAGE("TBD");
      char *line = (char*) calloc(10, sizeof(char));
      strncpy(line, "  ", 10);
      char *rval = trim_white(line);
@@ -113,7 +107,6 @@ void test_trim_white_all_whitespace(void)
 
 void test_trim_white_mostly_whitespace(void)
 {
-     TEST_IGNORE_MESSAGE("TBD");
      char *line = (char*) calloc(10, sizeof(char));
      strncpy(line, "    a    ", 10);
      char *rval = trim_white(line);
