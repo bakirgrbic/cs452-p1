@@ -1,12 +1,23 @@
 #include "lab.h"
 #include <stdio.h>
+#include <string.h>
 
 char *get_prompt(const char *env) {
-    // No need for malloc, getenv()'s returned pointer should not be modified.
-    char *prompt = getenv(env);
-    if (prompt == NULL) {
-        prompt = "shell>";
+    int default_length = 0;
+    int prompt_length = 0;
+    char *env_var = getenv(env);
+    char *prompt;
+
+    if (env_var == NULL) {
+        default_length = 7; // 6 chars + 1 for \0
+        prompt = (char*) calloc(default_length, sizeof(char));
+        strncpy(prompt, "shell>", default_length);
+    } else {
+        prompt_length = strlen(env_var) + 1; // + 1 for \0
+        prompt = (char*) calloc(prompt_length, sizeof(char));
+        strncpy(prompt, env_var, prompt_length);
     }
+
     return prompt;
 }
 
