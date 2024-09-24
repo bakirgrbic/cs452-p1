@@ -7,14 +7,24 @@
 int main(int argc, char **argv) {
     parse_args(argc, argv);
 
+    struct shell my_shell;
+    sh_init(&my_shell);
+
     char *line;
-    char *env_var = "MY_PROMPT";
-    char *prompt = get_prompt(env_var);
+    char *trimmed;
     using_history();
-    while ((line=readline(prompt))){
-        printf("%s\n",line);
+    while ((line=readline(my_shell.prompt))){
         add_history(line);
+        trimmed = trim_white(line);
+        // cmd_parse to simplify processing
+        // check if its a built in with do_builtin
+        //      else do nada for now
+        // cmd_free when done with cmd_parse
         free(line);
     }
+
+    // Deconstruct the shell before exiting
+    sh_destroy(&my_shell);
+
     return 0;
 }

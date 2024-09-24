@@ -21,20 +21,20 @@ char *get_prompt(const char *env) {
     return prompt;
 }
 
-int change_dir(char **dir) {
-    // TODO
-    return -1
-}
+//  int change_dir(char **dir) {
+//      // TODO
+//      return -1
+//  }
 
-char **cmd_parse(char const *line) {
-    // TODO
-    char **blah = ["a", "b"];
-    return blah;
-}
+//  char **cmd_parse(char const *line) {
+//      // TODO
+//      char **blah = ["a", "b"];
+//      return blah;
+//  }
 
-void cmd_free(char ** line) {
-    // TODO
-}
+//  void cmd_free(char ** line) {
+//      // TODO
+//  }
 
 char *trim_white(char *line) {
     int length = strlen(line);
@@ -66,16 +66,22 @@ char *trim_white(char *line) {
     return line; 
 }
 
-bool do_builtin(struct shell *sh, char **argv) {
-    // TODO
-}
+//  bool do_builtin(struct shell *sh, char **argv) {
+//      // TODO
+//  }
 
 void sh_init(struct shell *sh) {
-    // TODO
+    // TODO: Make sure to fully follow instructions in func stub
+    sh->shell_is_interactive = 0;
+    sh->shell_pgid = getpid();
+    // sh->shell_tmodes = NULL;
+    sh->shell_terminal = 0;
+    sh->prompt = get_prompt("MY_PROMPT");
 }
 
 void sh_destroy(struct shell *sh) {
-    // TODO
+    // TODO: Make sure to fully follow instructions in func stub
+    free(sh->prompt);
 }
 
 void parse_args(int argc, char **argv) {
