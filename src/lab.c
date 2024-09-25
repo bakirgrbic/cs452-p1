@@ -26,15 +26,45 @@ char *get_prompt(const char *env) {
 //      return -1
 //  }
 
-//  char **cmd_parse(char const *line) {
-//      // TODO
-//      char **blah = ["a", "b"];
-//      return blah;
-//  }
+char **cmd_parse(char const *line) {
+    // TODO: Make sure to fully follow instructions in func stub
+    int arg_max = 1;
+    int length = strlen(line);
+    char copy[length+1];
+    stpcpy(copy, line);
 
-//  void cmd_free(char ** line) {
-//      // TODO
-//  }
+    char *token = strtok(copy, " ");
+    while (token != NULL) {
+        printf("Token: %s\n", token);
+        arg_max++;
+        token = strtok(NULL, " ");
+    }
+
+    char **parsed = (char**) malloc(arg_max * sizeof(char*));
+  
+    stpcpy(copy, line);
+    token = strtok(copy, " ");
+    int i = 0;
+
+    while (token != NULL) {
+        printf("Again token: %s\n", token);
+        parsed[i] = token;
+
+        token = strtok(NULL, " ");
+        i++;
+    }
+    parsed[i] = NULL;
+    int upperbound = i;
+    for (int i = 0; i < upperbound; i++) {
+        printf("Parsed: %s\n", parsed[i]);
+    }
+
+    return parsed;
+}
+
+void cmd_free(char ** line) {
+    free(line);
+}
 
 char *trim_white(char *line) {
     int length = strlen(line);
