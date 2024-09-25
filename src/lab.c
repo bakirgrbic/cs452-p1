@@ -35,11 +35,9 @@ char **cmd_parse(char const *line) {
 
     char *token = strtok(copy, " ");
     while (token != NULL) {
-        printf("Token: %s\n", token);
         number_tokens++;
         token = strtok(NULL, " ");
     }
-    printf("Token: %s\n", token);
 
     char **parsed = (char**) malloc(number_tokens * sizeof(char*));
   
@@ -47,7 +45,6 @@ char **cmd_parse(char const *line) {
     token = strtok(copy, " ");
     int i = 0;
     while (i < number_tokens) {
-        printf("Again token: %s\n", token);
         if (token != NULL) {
             parsed[i] = (char*) malloc((strlen(token) + 1) * sizeof(char));
             stpcpy(parsed[i], token);
@@ -56,10 +53,6 @@ char **cmd_parse(char const *line) {
         }
         token = strtok(NULL, " ");
         i++;
-    }
-
-    for (int i = 0; i < number_tokens; i++) {
-        printf("Parsed: %s\n", parsed[i]);
     }
 
     return parsed;
