@@ -14,7 +14,6 @@ void tearDown(void) {
 
 void test_cmd_parse2(void)
 {
-     TEST_IGNORE_MESSAGE("TBD");
      //The string we want to parse from the user.
      //foo -v
      char *stng = (char*)malloc(sizeof(char)*7);
@@ -36,11 +35,23 @@ void test_cmd_parse2(void)
      free(expected[0]);
      free(expected[1]);
      free(expected);
+     cmd_free(actual);
+     free(stng);
+}
+
+void test_cmd_parse3(void)
+{
+     char **rval = cmd_parse("foo -v");
+     TEST_ASSERT_TRUE(rval);
+     TEST_ASSERT_EQUAL_STRING("foo", rval[0]);
+     TEST_ASSERT_EQUAL_STRING("-v", rval[1]);
+     TEST_ASSERT_EQUAL_STRING(NULL, rval[2]);
+     TEST_ASSERT_FALSE(rval[2]);
+     cmd_free(rval);
 }
 
 void test_cmd_parse(void)
 {
-     TEST_IGNORE_MESSAGE("TBD");
      char **rval = cmd_parse("ls -a -l");
      TEST_ASSERT_TRUE(rval);
      TEST_ASSERT_EQUAL_STRING("ls", rval[0]);
@@ -167,6 +178,7 @@ int main(void) {
   UNITY_BEGIN();
   RUN_TEST(test_cmd_parse);
   RUN_TEST(test_cmd_parse2);
+  RUN_TEST(test_cmd_parse3);
   RUN_TEST(test_trim_white_no_whitespace);
   RUN_TEST(test_trim_white_start_whitespace);
   RUN_TEST(test_trim_white_end_whitespace);

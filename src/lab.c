@@ -28,7 +28,7 @@ char *get_prompt(const char *env) {
 
 char **cmd_parse(char const *line) {
     // TODO: Make sure to fully follow instructions in func stub
-    int arg_max = 1;
+    int number_tokens = 1; // at least null is there
     int length = strlen(line);
     char copy[length+1];
     stpcpy(copy, line);
@@ -36,26 +36,29 @@ char **cmd_parse(char const *line) {
     char *token = strtok(copy, " ");
     while (token != NULL) {
         printf("Token: %s\n", token);
-        arg_max++;
+        number_tokens++;
         token = strtok(NULL, " ");
     }
+    printf("Token: %s\n", token);
 
-    char **parsed = (char**) malloc(arg_max * sizeof(char*));
+    char **parsed = (char**) malloc(number_tokens * sizeof(char*));
   
     stpcpy(copy, line);
     token = strtok(copy, " ");
     int i = 0;
-
-    while (token != NULL) {
+    while (i < number_tokens) {
         printf("Again token: %s\n", token);
-        parsed[i] = token;
-
+        if (token != NULL) {
+            parsed[i] = (char*) malloc((strlen(token) + 1) * sizeof(char));
+            stpcpy(parsed[i], token);
+        } else {
+            parsed[i] = (char*) NULL;
+        }
         token = strtok(NULL, " ");
         i++;
     }
-    parsed[i] = NULL;
-    int upperbound = i;
-    for (int i = 0; i < upperbound; i++) {
+
+    for (int i = 0; i < number_tokens; i++) {
         printf("Parsed: %s\n", parsed[i]);
     }
 
@@ -63,6 +66,11 @@ char **cmd_parse(char const *line) {
 }
 
 void cmd_free(char ** line) {
+    int i = 0;
+    while (line[i] != NULL) {
+        free(line[i]);
+        i++;
+    }
     free(line);
 }
 
