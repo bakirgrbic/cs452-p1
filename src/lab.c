@@ -2,6 +2,9 @@
 #include <stdio.h>
 #include <string.h>
 
+void my_exit(struct shell *sh, char **argv);
+void my_pwd();
+
 char *get_prompt(const char *env) {
     int default_length = 0;
     int prompt_length = 0;
@@ -23,7 +26,7 @@ char *get_prompt(const char *env) {
 
 //  int change_dir(char **dir) {
 //      // TODO
-//      return -1
+//      return -1;
 //  }
 
 char **cmd_parse(char const *line) {
@@ -40,7 +43,7 @@ char **cmd_parse(char const *line) {
     }
 
     char **parsed = (char**) malloc(number_tokens * sizeof(char*));
-  
+
     stpcpy(copy, line);
     token = strtok(copy, " ");
     int i = 0;
@@ -97,9 +100,28 @@ char *trim_white(char *line) {
     return line; 
 }
 
-//  bool do_builtin(struct shell *sh, char **argv) {
-//      // TODO
-//  }
+bool do_builtin(struct shell *sh, char **argv) {
+    char* command = argv[0];
+    if (command == NULL) {
+        return false;
+    }
+
+    if (strcmp(command, "exit") == 0) {
+        my_exit(sh, argv);
+        return true;
+    } else if (strcmp(command, "cd") == 0) {
+        // call my_cd();
+        return true;
+    } else if (strcmp(command, "pwd") == 0) {
+        my_pwd();
+        return true;
+    } else if (strcmp(command, "history") == 0) {
+        // call my_history();
+        return true;
+    }
+
+    return false;
+}
 
 void sh_init(struct shell *sh) {
     // TODO: Make sure to fully follow instructions in func stub
@@ -134,4 +156,29 @@ void parse_args(int argc, char **argv) {
                 break;
         }
     } 
+}
+
+/**
+* @brief Takes shell, and formatted command 
+* to properly dellocate memory and exit the program.
+*
+* @param sh The shell
+* @param argv The formated command
+*/
+void my_exit(struct shell *sh, char **argv) {
+    cmd_free(argv);
+    sh_destroy(sh);
+    // TODO: when would it not exit normally?
+    exit(2); // TODO: Change back to zero for normal exits after getting ctrl-d to work
+}
+
+/**
+* @brief Prints the current working directory in the shell
+*/
+void my_pwd() {
+    char *cwd = getcwd(NULL, 0);
+
+    printf("%s\n", cwd);
+
+    free(cwd);
 }
