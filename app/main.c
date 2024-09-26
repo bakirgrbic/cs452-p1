@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <readline/readline.h>
 #include <readline/history.h>
+#include <errno.h>
 #include <sys/wait.h>
 // TODO: need to make sure readline and history work on github workspaces
 
@@ -46,7 +47,10 @@ int main(int argc, char **argv) {
             } else if (rc == 0) {
                 pid_t child = getpid();
                 setpgid(child, child);
-                tcsetpgrp(sh.shell_terminal,child);
+                // Set an if branch here to control if a proc is foreground or not
+                // For now it is foreground
+                tcsetpgrp(my_shell.shell_terminal, child);
+
                 signal (SIGINT, SIG_DFL);
                 signal (SIGQUIT, SIG_DFL);
                 signal (SIGTSTP, SIG_DFL);
@@ -55,8 +59,11 @@ int main(int argc, char **argv) {
 
                 execvp(parsed[0], parsed);
                 perror("exec failed");
+                exit(4);
             } else {
                 wait(NULL);
+                tcsetpgrp(my_shell.shell_terminal, my_shell.shell_pgid);
+                tcsetattr(my_shell.shell_terminal, TCSADRAIN, &(my_shell.shell_tmodes));
             }
         }
 

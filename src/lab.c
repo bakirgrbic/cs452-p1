@@ -5,6 +5,7 @@
 #include <errno.h>
 #include <readline/history.h>
 #include <signal.h>
+#include <sys/wait.h>
 
 void my_exit(struct shell *sh, char **argv);
 void my_pwd();
@@ -75,12 +76,17 @@ char **cmd_parse(char const *line) {
         token = strtok(NULL, " ");
     }
 
-    char **parsed = (char**) malloc(number_tokens * sizeof(char*));
+    int command_length = number_tokens;
+    if (number_tokens > max_args) {
+        command_length = max_args;
+    }
+
+    char **parsed = (char**) malloc(command_length * sizeof(char*));
 
     stpcpy(copy, line);
     token = strtok(copy, " ");
     int i = 0;
-    while (i < number_tokens) {
+    while (i < command_length) {
         if (token != NULL) {
             parsed[i] = (char*) malloc((strlen(token) + 1) * sizeof(char));
             stpcpy(parsed[i], token);
@@ -226,9 +232,7 @@ void my_exit(struct shell *sh, char **argv) {
 */
 void my_pwd() {
     char *cwd = getcwd(NULL, 0);
-
     printf("%s\n", cwd);
-
     free(cwd);
 }
 
