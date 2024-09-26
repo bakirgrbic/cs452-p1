@@ -4,6 +4,7 @@
 #include <pwd.h>
 #include <errno.h>
 #include <readline/history.h>
+#include <signal.h>
 
 void my_exit(struct shell *sh, char **argv);
 void my_pwd();
@@ -151,16 +152,32 @@ bool do_builtin(struct shell *sh, char **argv) {
 }
 
 void sh_init(struct shell *sh) {
-    // TODO: Make sure to fully follow instructions in func stub
-    sh->shell_is_interactive = 0;
-    sh->shell_pgid = getpid();
-    // sh->shell_tmodes = NULL;
-    sh->shell_terminal = 0;
-    sh->prompt = get_prompt("MY_PROMPT");
+    sh->shell_terminal = STDIN_FILENO;
+    sh->shell_is_interactive = isatty(sh->shell_terminal);
+    if (sh->shell_is_interactive) {
+        while (tcgetpgrp(sh->shell_terminal) != (sh->shell_pgid = getpgrp())) {
+            kill(- sh->shell_pgid, SIGTTIN);
+        }
+        signal(SIGINT, SIG_IGN);
+        signal(SIGQUIT, SIG_IGN);
+        signal(SIGTSTP, SIG_IGN);
+        signal(SIGTTIN, SIG_IGN);
+        signal(SIGTTOU, SIG_IGN);
+
+        sh->shell_pgid = getpid();
+        if (setpgid(sh->shell_pgid, sh->shell_pgid) < 0) {
+          perror ("Couldn't put the shell in its own process group");
+          exit(1);
+        }
+
+        tcsetpgrp(sh->shell_terminal, sh->shell_pgid);
+        tcgetattr(sh->shell_terminal, &(sh->shell_tmodes));
+
+        sh->prompt = get_prompt("MY_PROMPT");
+    }
 }
 
 void sh_destroy(struct shell *sh) {
-    // TODO: Make sure to fully follow instructions in func stub
     free(sh->prompt);
 }
 
@@ -179,7 +196,7 @@ void parse_args(int argc, char **argv) {
                 break;
             default:
                 fprintf(stderr, "Usage: %s [-v] [-h]\n", argv[0]);
-                exit(1);
+                exit(2);
                 break;
         }
     } 
@@ -196,7 +213,7 @@ void my_exit(struct shell *sh, char **argv) {
     cmd_free(argv);
     sh_destroy(sh);
     // TODO: when would it not exit normally?
-    exit(2); // TODO: Change back to zero for normal exits after getting ctrl-d to work
+    exit(0);
 }
 
 /**
