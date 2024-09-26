@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <readline/readline.h>
 #include <readline/history.h>
+#include <sys/wait.h>
 // TODO: need to make sure readline and history work on github workspaces
 
 void my_exit(struct shell *sh, char **argv);
@@ -37,7 +38,28 @@ int main(int argc, char **argv) {
         trimmed = trim_white(line);
         parsed = cmd_parse(trimmed);
 
-        do_builtin(&my_shell, parsed);
+        if (!do_builtin(&my_shell, parsed) && parsed[0] != NULL) {
+            int rc = fork();
+            if (rc < 0) {
+                fprintf(stderr, "fork failed\n");
+                exit(3);
+            } else if (rc == 0) {
+                pid_t child = getpid();
+                setpgid(child, child);
+                tcsetpgrp(sh.shell_terminal,child);
+                signal (SIGINT, SIG_DFL);
+                signal (SIGQUIT, SIG_DFL);
+                signal (SIGTSTP, SIG_DFL);
+                signal (SIGTTIN, SIG_DFL);
+                signal (SIGTTOU, SIG_DFL);
+
+                execvp(parsed[0], parsed);
+                perror("exec failed");
+            } else {
+                wait(NULL);
+            }
+        }
+
         cmd_free(parsed);
         free(line);
     }

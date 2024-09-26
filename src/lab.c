@@ -58,7 +58,12 @@ int change_dir(char **dir) {
 }
 
 char **cmd_parse(char const *line) {
-    // TODO: Make sure to fully follow instructions in func stub
+    errno = 0;
+    long max_args = sysconf(_SC_ARG_MAX);
+    if (max_args < 0 && errno != 0) {
+          perror ("sysconf error trying to get ARG_MAX");
+    }
+
     int number_tokens = 1; // at least null is there
     int length = strlen(line);
     char copy[length+1];
