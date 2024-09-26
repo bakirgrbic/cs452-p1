@@ -147,7 +147,6 @@ void test_get_prompt_custom(void)
 
 void test_ch_dir_home(void)
 {
-     TEST_IGNORE_MESSAGE("TBD");
      char *line = (char*) calloc(10, sizeof(char));
      strncpy(line, "cd", 10);
      char **cmd = cmd_parse(line);
@@ -162,7 +161,6 @@ void test_ch_dir_home(void)
 
 void test_ch_dir_root(void)
 {
-     TEST_IGNORE_MESSAGE("TBD");
      char *line = (char*) calloc(10, sizeof(char));
      strncpy(line, "cd /", 10);
      char **cmd = cmd_parse(line);

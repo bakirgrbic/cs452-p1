@@ -1,6 +1,7 @@
 #include "lab.h"
 #include <stdio.h>
 #include <string.h>
+#include <pwd.h>
 
 void my_exit(struct shell *sh, char **argv);
 void my_pwd();
@@ -24,10 +25,33 @@ char *get_prompt(const char *env) {
     return prompt;
 }
 
-//  int change_dir(char **dir) {
-//      // TODO
-//      return -1;
-//  }
+int change_dir(char **dir) {
+    // 1st part of dir is the command so ignore it
+    errno = 0;
+    char *target_dir = dir[1]; // Assuming that no flags are passed and only changing dirs
+    char *path;
+    int return_value;
+    if (target_dir == NULL) {
+        char *home = getenv("HOME");
+        if (home == NULL) {
+            uid_t user_id = getuid();
+            struct passwd *pwd = getpwuid(user_id);
+            home = pwd->pw_dir;
+        }
+        path = home;
+
+    } else {
+        path = target_dir;
+    }
+
+    return_value = chdir(path);
+
+    if (return_value == -1) {
+        perror("cd failed");
+    }
+
+    return return_value;
+}
 
 char **cmd_parse(char const *line) {
     // TODO: Make sure to fully follow instructions in func stub
@@ -110,7 +134,7 @@ bool do_builtin(struct shell *sh, char **argv) {
         my_exit(sh, argv);
         return true;
     } else if (strcmp(command, "cd") == 0) {
-        // call my_cd();
+        change_dir(argv);
         return true;
     } else if (strcmp(command, "pwd") == 0) {
         my_pwd();
