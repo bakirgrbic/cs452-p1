@@ -2,9 +2,12 @@
 #include <stdio.h>
 #include <string.h>
 #include <pwd.h>
+#include <errno.h>
+#include <readline/history.h>
 
 void my_exit(struct shell *sh, char **argv);
 void my_pwd();
+void my_history();
 
 char *get_prompt(const char *env) {
     int default_length = 0;
@@ -140,7 +143,7 @@ bool do_builtin(struct shell *sh, char **argv) {
         my_pwd();
         return true;
     } else if (strcmp(command, "history") == 0) {
-        // call my_history();
+        my_history();
         return true;
     }
 
@@ -205,4 +208,17 @@ void my_pwd() {
     printf("%s\n", cwd);
 
     free(cwd);
+}
+
+/**
+* @brief Prints history of all commands entered into the shell.
+*/
+void my_history() {
+    HIST_ENTRY **history = history_list();
+
+    int i = 0;
+    while (history[i] != NULL) {
+        printf("%s\n", history[i]->line);
+        i++;
+    }
 }

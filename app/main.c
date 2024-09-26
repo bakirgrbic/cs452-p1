@@ -7,6 +7,7 @@
 
 void my_exit(struct shell *sh, char **argv);
 void my_pwd();
+void my_history();
 
 int main(int argc, char **argv) {
     parse_args(argc, argv);
