@@ -2,6 +2,7 @@
 #include "harness/unity.h"
 #include "../src/lab.h"
 
+bool is_background(char** argv);
 
 void setUp(void) {
   // set stuff up here
@@ -172,6 +173,66 @@ void test_ch_dir_root(void)
      cmd_free(cmd);
 }
 
+void test_is_background(void)
+{
+     char **cmd = cmd_parse("foo -v");
+
+     TEST_ASSERT_EQUAL_STRING("foo", cmd[0]);
+     TEST_ASSERT_EQUAL_STRING("-v", cmd[1]);
+     TEST_ASSERT_EQUAL_STRING(NULL, cmd[2]);
+     TEST_ASSERT_FALSE(cmd[2]);
+
+     bool actual = is_background(cmd);
+     TEST_ASSERT_FALSE(actual);
+
+     cmd_free(cmd);
+}
+
+void test_is_background2(void)
+{
+
+     char **cmd = cmd_parse("foo -v &");
+
+     TEST_ASSERT_EQUAL_STRING("foo", cmd[0]);
+     TEST_ASSERT_EQUAL_STRING("-v", cmd[1]);
+     TEST_ASSERT_EQUAL_STRING("&", cmd[2]);
+     TEST_ASSERT_EQUAL_STRING(NULL, cmd[3]);
+     TEST_ASSERT_FALSE(cmd[3]);
+
+     bool actual = is_background(cmd);
+     TEST_ASSERT_TRUE(actual);
+
+     TEST_ASSERT_EQUAL_STRING("foo", cmd[0]);
+     TEST_ASSERT_EQUAL_STRING("-v", cmd[1]);
+     TEST_ASSERT_EQUAL_STRING(NULL, cmd[2]);
+     TEST_ASSERT_EQUAL_STRING(NULL, cmd[3]);
+     TEST_ASSERT_FALSE(cmd[2]);
+     TEST_ASSERT_FALSE(cmd[3]);
+
+     cmd_free(cmd);
+}
+
+void test_is_background3(void)
+{
+
+     char **cmd = cmd_parse("foo -v&");
+
+     TEST_ASSERT_EQUAL_STRING("foo", cmd[0]);
+     TEST_ASSERT_EQUAL_STRING("-v&", cmd[1]);
+     TEST_ASSERT_EQUAL_STRING(NULL, cmd[2]);
+     TEST_ASSERT_FALSE(cmd[2]);
+
+     bool actual = is_background(cmd);
+     TEST_ASSERT_TRUE(actual);
+
+     TEST_ASSERT_EQUAL_STRING("foo", cmd[0]);
+     TEST_ASSERT_EQUAL_STRING("-v", cmd[1]);
+     TEST_ASSERT_EQUAL_STRING(NULL, cmd[2]);
+     TEST_ASSERT_FALSE(cmd[2]);
+
+     cmd_free(cmd);
+}
+
 int main(void) {
   UNITY_BEGIN();
   RUN_TEST(test_cmd_parse);
@@ -188,6 +249,9 @@ int main(void) {
   RUN_TEST(test_get_prompt_custom);
   RUN_TEST(test_ch_dir_home);
   RUN_TEST(test_ch_dir_root);
+  RUN_TEST(test_is_background);
+  RUN_TEST(test_is_background2);
+  RUN_TEST(test_is_background3);
 
   return UNITY_END();
 }

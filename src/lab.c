@@ -10,6 +10,7 @@
 void my_exit(struct shell *sh, char **argv);
 void my_pwd();
 void my_history();
+bool is_background(char** argv);
 
 char *get_prompt(const char *env) {
     int default_length = 0;
@@ -247,4 +248,37 @@ void my_history() {
         printf("%s\n", history[i]->line);
         i++;
     }
+}
+
+/**
+* @brief Checks whether a parsed command is a background process. Also
+* removes ampersand character to have clean input to exec functions.
+*
+* @param argv The formated command
+* @return True if the command is a background process, false otherwise. 
+*/
+bool is_background(char** argv) {
+    bool background = false;
+
+    int i = 0;
+    while (argv[i] != NULL) {
+        // Need to walk to the end of the list to check the last command
+        if (argv[i+1] == NULL) {
+            if (strcmp(argv[i], "&") == 0) {
+                background = true;
+                free(argv[i]);
+                argv[i] = (char*) NULL;
+            } else { 
+                // Need to make sure last string doesn't contain & at the end
+                int length = strlen(argv[i]);
+                if (argv[i][length-1] == '&') {
+                    background = true;
+                    argv[i][length-1] = '\0';
+                }
+            }
+        }
+        i++;
+    }
+
+    return background;
 }

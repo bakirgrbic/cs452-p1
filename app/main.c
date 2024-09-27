@@ -9,6 +9,7 @@
 void my_exit(struct shell *sh, char **argv);
 void my_pwd();
 void my_history();
+bool is_background(char** argv);
 
 int main(int argc, char **argv) {
     parse_args(argc, argv);
