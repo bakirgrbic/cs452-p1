@@ -11,6 +11,7 @@ void my_exit(struct shell *sh, char **argv);
 void my_pwd();
 void my_history();
 bool is_background(char** argv);
+void sanitize_background(char** argv);
 
 char *get_prompt(const char *env) {
     int default_length = 0;
@@ -251,11 +252,10 @@ void my_history() {
 }
 
 /**
-* @brief Checks whether a parsed command is a background process. Also
-* removes ampersand character to have clean input to exec functions.
+* @brief Checks whether a parsed command is a background process. 
 *
 * @param argv The formated command
-* @return True if the command is a background process, false otherwise. 
+* @return True if the command is a background process, false otherwise.
 */
 bool is_background(char** argv) {
     bool background = false;
@@ -266,14 +266,11 @@ bool is_background(char** argv) {
         if (argv[i+1] == NULL) {
             if (strcmp(argv[i], "&") == 0) {
                 background = true;
-                free(argv[i]);
-                argv[i] = (char*) NULL;
-            } else { 
+            } else {
                 // Need to make sure last string doesn't contain & at the end
                 int length = strlen(argv[i]);
                 if (argv[i][length-1] == '&') {
                     background = true;
-                    argv[i][length-1] = '\0';
                 }
             }
         }
@@ -281,4 +278,29 @@ bool is_background(char** argv) {
     }
 
     return background;
+}
+
+/**
+* @brief Removes ampersand character from background proccess's formatted
+* commands to have sanitized input for exec() functions.
+*
+* @param argv The formated command
+*/
+void sanitize_background(char** argv) {
+
+    int i = 0;
+    while (argv[i] != NULL) {
+        if (argv[i+1] == NULL) {
+            if (strcmp(argv[i], "&") == 0) {
+                free(argv[i]);
+                argv[i] = (char*) NULL;
+            } else {
+                int length = strlen(argv[i]);
+                if (argv[i][length-1] == '&') {
+                    argv[i][length-1] = '\0';
+                }
+            }
+        }
+        i++;
+    }
 }
