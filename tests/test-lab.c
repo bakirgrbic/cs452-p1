@@ -3,7 +3,6 @@
 #include "../src/lab.h"
 
 bool is_background(char** argv);
-void sanitize_background(char** argv);
 
 void setUp(void) {
   // set stuff up here
@@ -201,8 +200,6 @@ void test_is_background2(void)
      bool actual = is_background(cmd);
      TEST_ASSERT_TRUE(actual);
 
-     sanitize_background(cmd);
-
      TEST_ASSERT_EQUAL_STRING("foo", cmd[0]);
      TEST_ASSERT_EQUAL_STRING("-v", cmd[1]);
      TEST_ASSERT_EQUAL_STRING(NULL, cmd[2]);
@@ -224,8 +221,6 @@ void test_is_background3(void)
 
      bool actual = is_background(cmd);
      TEST_ASSERT_TRUE(actual);
-
-     sanitize_background(cmd);
 
      TEST_ASSERT_EQUAL_STRING("foo", cmd[0]);
      TEST_ASSERT_EQUAL_STRING("-v", cmd[1]);

@@ -11,7 +11,22 @@ void my_exit(struct shell *sh, char **argv);
 void my_pwd();
 void my_history();
 bool is_background(char** argv);
-void sanitize_background(char** argv);
+void my_jobs();
+
+struct background_process {
+    int n;
+    pid_t bg_pid;
+    char* command;
+    struct background_process *next;
+    bool completed;
+    bool reported;
+};
+
+/* This list below is needed because there is no other way to communicate
+ * the background jobs list between my_jobs method defined in this file
+ * and to bookkeep in main.c without changing the defined method api
+ * for do_builtin in lab.h.*/
+struct background_process *bgp_list = NULL;
 
 char *get_prompt(const char *env) {
     int default_length = 0;
@@ -159,6 +174,9 @@ bool do_builtin(struct shell *sh, char **argv) {
     } else if (strcmp(command, "history") == 0) {
         my_history();
         return true;
+    } else if (strcmp(command, "jobs") == 0) {
+        my_jobs();
+        return true;
     }
 
     return false;
@@ -252,7 +270,9 @@ void my_history() {
 }
 
 /**
-* @brief Checks whether a parsed command is a background process. 
+* @brief Checks whether a parsed command is a background process. Also 
+* removes ampersand character from background proccess's formatted
+* commands to have sanitized input for exec() functions.
 *
 * @param argv The formated command
 * @return True if the command is a background process, false otherwise.
@@ -266,11 +286,14 @@ bool is_background(char** argv) {
         if (argv[i+1] == NULL) {
             if (strcmp(argv[i], "&") == 0) {
                 background = true;
+                free(argv[i]);
+                argv[i] = (char*) NULL;
             } else {
                 // Need to make sure last string doesn't contain & at the end
                 int length = strlen(argv[i]);
                 if (argv[i][length-1] == '&') {
                     background = true;
+                    argv[i][length-1] = '\0';
                 }
             }
         }
@@ -281,26 +304,20 @@ bool is_background(char** argv) {
 }
 
 /**
-* @brief Removes ampersand character from background proccess's formatted
-* commands to have sanitized input for exec() functions.
-*
-* @param argv The formated command
+* @brief Prints all running and done process.
 */
-void sanitize_background(char** argv) {
+void my_jobs() {
+    struct background_process *current_bgp = bgp_list;
 
-    int i = 0;
-    while (argv[i] != NULL) {
-        if (argv[i+1] == NULL) {
-            if (strcmp(argv[i], "&") == 0) {
-                free(argv[i]);
-                argv[i] = (char*) NULL;
-            } else {
-                int length = strlen(argv[i]);
-                if (argv[i][length-1] == '&') {
-                    argv[i][length-1] = '\0';
-                }
-            }
+    while (current_bgp != NULL) {
+        if (!current_bgp->completed) {
+            printf("[%d] %d Running %s\n", current_bgp->n, current_bgp->bg_pid, current_bgp->command);
         }
-        i++;
+        if (current_bgp->completed && !current_bgp->reported) {
+            printf("[%d] Done %s\n", current_bgp->n, current_bgp->command);
+            current_bgp->reported = true;
+        }
+
+        current_bgp = current_bgp->next;
     }
 }
