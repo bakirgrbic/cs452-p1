@@ -22,10 +22,10 @@ struct background_process {
     bool reported;
 };
 
-/* This list below is needed because there is no other way to communicate
- * the background jobs list between my_jobs method defined in this file
- * and to bookkeep in main.c without changing the defined method api
- * for do_builtin in lab.h.*/
+/* This list is only used in this file and no where else. It is needed
+ * becuase there is no other way to share the list information on background
+ * processes to my_jobs method defined in this file without changing
+ * the api declaraition for do_builtin in lab.h. */
 struct background_process *bgp_list = NULL;
 
 char *get_prompt(const char *env) {
@@ -243,7 +243,17 @@ void parse_args(int argc, char **argv) {
 void my_exit(struct shell *sh, char **argv) {
     cmd_free(argv);
     sh_destroy(sh);
-    // TODO: when would it not exit normally?
+
+    // Free background processes
+    struct background_process *current_bgp = bgp_list;
+    struct background_process *next_bgp = current_bgp;
+    while (current_bgp != NULL) {
+        next_bgp = current_bgp->next;
+        free(current_bgp->command);
+        free(current_bgp);
+        current_bgp = next_bgp;
+    }
+
     exit(0);
 }
 
@@ -319,5 +329,140 @@ void my_jobs() {
         }
 
         current_bgp = current_bgp->next;
+    }
+}
+
+/**
+* @brief Checks if all processes are done. Prints any jobs that are so long
+* that the trimmed argument is not "jobs".
+*
+* @param trimmed White space trimmed string
+* @return length of background process list
+*/
+int check_processes(char* trimmed) {
+    int status;
+    int i = 0;
+    struct background_process *current_bgp = bgp_list;
+    while (current_bgp != NULL) {
+        if (waitpid(current_bgp->bg_pid, &status, WNOHANG)) {
+            current_bgp->completed = true;
+        }
+        if (current_bgp->completed && !current_bgp->reported && strcmp("jobs", trimmed) != 0) {
+            printf("[%d] Done %s\n", current_bgp->n, current_bgp->command);
+            current_bgp->reported = true;
+        }
+        current_bgp = current_bgp->next;
+        i++;
+    }
+
+    return i;
+}
+
+/**
+* @brief Removes all background processes that have been completed and reported.
+*
+* @param bgp_length Total length of background processes in bgp_list
+*/
+void prune_processes(int bgp_length) {
+    struct background_process *current_bgp = bgp_list;
+    struct background_process *prev_bgp;
+    int i = 0;
+    while (i < bgp_length) {
+        current_bgp = bgp_list;
+        prev_bgp = current_bgp;
+        while (current_bgp != NULL) {
+            if (current_bgp->completed && current_bgp->reported) {
+                if (current_bgp == bgp_list) { // start of list
+                    current_bgp = bgp_list->next;
+                    free(bgp_list->command);
+                    free(bgp_list);
+                    bgp_list = current_bgp;
+                } else if (current_bgp->next != NULL) { // middle of list
+                    prev_bgp->next = current_bgp->next;
+                    free(current_bgp->command);
+                    free(current_bgp);
+                    current_bgp = NULL;
+                } else { // end
+                    prev_bgp->next = NULL;
+                    free(current_bgp->command);
+                    free(current_bgp);
+                }
+                break;
+            }
+            prev_bgp = current_bgp;
+            current_bgp = current_bgp->next;
+        }
+        i++;
+    }
+}
+
+/**
+* @brief Creates foreground and background processes. Updates control of shell
+* for child and parent processes. Creates background_process elements and
+* adds them to bgp_list.
+*
+* @param sh The shell
+* @param argv The formated command
+* @param trimmed The white space trimmed user input
+*/
+void create_process(struct shell *sh, char** argv, char* trimmed) {
+    if (argv == NULL || argv[0] == NULL) {
+        return;
+    }
+    bool background = is_background(argv);
+    int rc = fork();
+
+    if (rc < 0) {
+        fprintf(stderr, "fork failed\n");
+        exit(3);
+    } else if (rc == 0) { // child
+        pid_t child = getpid();
+        setpgid(child, child);
+
+        if (!background) {
+            tcsetpgrp(sh->shell_terminal, child);
+        }
+
+        signal (SIGINT, SIG_DFL);
+        signal (SIGQUIT, SIG_DFL);
+        signal (SIGTSTP, SIG_DFL);
+        signal (SIGTTIN, SIG_DFL);
+        signal (SIGTTOU, SIG_DFL);
+
+        execvp(argv[0], argv);
+        perror("exec failed");
+        exit(4);
+    } else { // parent
+        if (!background) { // foreground
+            wait(NULL);
+            tcsetpgrp(sh->shell_terminal, sh->shell_pgid);
+            tcsetattr(sh->shell_terminal, TCSADRAIN, &(sh->shell_tmodes));
+        } else { // background
+            struct background_process *current_bgp = (struct background_process*) malloc(sizeof(struct background_process));
+            current_bgp->bg_pid = rc;
+            current_bgp->command = (char*) malloc((strlen(trimmed) + 1) * sizeof(char));
+            stpcpy(current_bgp->command, trimmed);
+            current_bgp->next = NULL;
+            current_bgp->completed = false;
+            current_bgp->reported = false;
+
+            if (bgp_list == NULL) { // No other background processes
+                current_bgp->n = 1;
+
+                printf("[%d] %d %s\n", current_bgp->n, current_bgp->bg_pid, current_bgp->command);
+
+                bgp_list = current_bgp;
+            } else { // Other background processes exist
+                struct background_process *bgp = bgp_list;
+                while(bgp->next != NULL) {
+                    bgp = bgp->next;
+                }
+                current_bgp->n = bgp->n + 1;
+
+                printf("[%d] %d %s\n", current_bgp->n, current_bgp->bg_pid, current_bgp->command);
+
+                bgp->next = current_bgp;
+            }
+        }
     }
 }
