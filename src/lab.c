@@ -42,6 +42,21 @@ void queue_destroy(queue_t q) {
     free(q);
 }
 
+void enqueue(queue_t q, void *data) {
+    pthread_mutex_lock(&(q->lock));
+    while (q->count == q->capacity) {
+        pthread_cond_wait(&(q->empty), &(q->lock));
+    }
+    q->arr[q->tail] = data;
+    if (q->tail == q->capacity) {
+        q->tail = 0;
+    } else {
+        q->tail += 1;
+    }
+
+    pthread_cond_broadcast(&(q->fill));
+    pthread_mutex_unlock(&(q->lock));
+}
 
 void queue_shutdown(queue_t q) {
     pthread_mutex_lock(&(q->lock));
