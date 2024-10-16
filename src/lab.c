@@ -47,6 +47,8 @@ void enqueue(queue_t q, void *data) {
     while (q->count == q->capacity) {
         pthread_cond_wait(&(q->empty), &(q->lock));
     }
+    q->size++;
+
     q->arr[q->tail] = data;
     if (q->tail == q->capacity) {
         q->tail = 0;
@@ -56,6 +58,25 @@ void enqueue(queue_t q, void *data) {
 
     pthread_cond_broadcast(&(q->fill));
     pthread_mutex_unlock(&(q->lock));
+}
+
+void *dequeue(queue_t q) {
+    pthread_mutex_lock(&(q->lock));
+    while (q->count == 0 && !q->shutdown) {
+        pthread_cond_wait(&(q->fill), &(q->lock));
+    }
+    q->size--;
+
+    void* data = q->arr[q->head];
+    if (q->head == q->capacity) {
+        q->head = 0;
+    } else {
+        q->head += 1;
+    }
+
+    pthread_cond_broadcast(&(q->empty));
+    pthread_mutex_unlock(&(q->lock));
+    return data
 }
 
 void queue_shutdown(queue_t q) {
