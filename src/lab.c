@@ -1,3 +1,6 @@
+#include "lab.h"
+#include <pthread.h>
+
 struct queue {
     void** arr;
     int capacity;
@@ -10,33 +13,27 @@ struct queue {
 };
 
 queue_t queue_init(int capacity) {
-    int rc; 
-
-    queue_t queue = (queue_t) malloc(sizeof(queue_t));
-    queue->arr = (void**) malloc(capacity * sizeof(void*));
+    queue_t queue = (queue_t) malloc(sizeof(struct queue));
+    queue->arr = (void**) malloc((capacity) * sizeof(void*));
     queue->capacity = capacity;
     queue->size = 0;
     queue->head= 0;
     queue->tail= 0;
     queue->shutdown = false;
 
-    rc = pthread_mutex_init(&(queue->lock), NULL);
-    assert(rc == 0);
-    rc = pthread_cond_init(&(queue->empty), NULL);
-    assert(rc == 0);
-    rc = pthread_cond_init(&(queue->fill), NULL);
-    assert(rc == 0);
+    pthread_mutex_init(&(queue->lock), NULL);
+    pthread_cond_init(&(queue->empty), NULL);
+    pthread_cond_init(&(queue->fill), NULL);
+
+    return queue;
+
+    return queue;
 }
 
 void queue_destroy(queue_t q) {
-    int rc; 
-
-    rc = pthread_mutex_destroy(&(q->lock));
-    assert(rc == 0);
-    rc = pthread_cond_destroy(&(q->empty));
-    assert(rc == 0);
-    rc = pthread_cond_destroy(&(q->fill));
-    assert(rc == 0);
+    pthread_mutex_destroy(&(q->lock));
+    pthread_cond_destroy(&(q->empty));
+    pthread_cond_destroy(&(q->fill));
 
     free(q->arr);
     free(q);
@@ -44,17 +41,13 @@ void queue_destroy(queue_t q) {
 
 void enqueue(queue_t q, void *data) {
     pthread_mutex_lock(&(q->lock));
-    while (q->count == q->capacity) {
+    while (q->size == q->capacity) {
         pthread_cond_wait(&(q->empty), &(q->lock));
     }
-    q->size++;
 
     q->arr[q->tail] = data;
-    if (q->tail == q->capacity) {
-        q->tail = 0;
-    } else {
-        q->tail += 1;
-    }
+    q->tail = (q->tail + 1) % q->capacity;
+    q->size++;
 
     pthread_cond_broadcast(&(q->fill));
     pthread_mutex_unlock(&(q->lock));
@@ -62,21 +55,21 @@ void enqueue(queue_t q, void *data) {
 
 void *dequeue(queue_t q) {
     pthread_mutex_lock(&(q->lock));
-    while (q->count == 0 && !q->shutdown) {
+    while (q->size == 0 && !q->shutdown) {
         pthread_cond_wait(&(q->fill), &(q->lock));
     }
-    q->size--;
 
     void* data = q->arr[q->head];
-    if (q->head == q->capacity) {
-        q->head = 0;
-    } else {
-        q->head += 1;
+    if (q->size == 0) {
+        data = NULL;
+    } else  {
+        q->head = (q->head + 1) % q->capacity;
+        q->size--;
     }
 
     pthread_cond_broadcast(&(q->empty));
     pthread_mutex_unlock(&(q->lock));
-    return data
+    return data;
 }
 
 void queue_shutdown(queue_t q) {
