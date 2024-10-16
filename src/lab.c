@@ -41,3 +41,33 @@ void queue_destroy(queue_t q) {
     free(q->arr);
     free(q);
 }
+
+
+void queue_shutdown(queue_t q) {
+    pthread_mutex_lock(&(q->lock));
+
+    q->shutdown = true; 
+    pthread_cond_broadcast(&(q->fill));
+
+    pthread_mutex_unlock(&(q->lock));
+}
+
+bool is_empty(queue_t q) {
+    pthread_mutex_lock(&(q->lock));
+
+    bool empty = q->size == 0;
+
+    pthread_mutex_unlock(&(q->lock));
+
+    return empty;
+}
+
+bool is_shutdown(queue_t q) {
+    pthread_mutex_lock(&(q->lock));
+
+    bool shutdown = q->shutdown;
+
+    pthread_mutex_unlock(&(q->lock));
+
+    return shutdown;
+}
