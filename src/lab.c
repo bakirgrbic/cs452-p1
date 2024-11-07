@@ -1,102 +1,108 @@
+#include <stdlib.h>
+#include <sys/time.h> /* for gettimeofday system call */
 #include "lab.h"
-#include <pthread.h>
 
-struct queue {
-    void** arr;
-    int capacity;
-    int size;
-    int head;
-    int tail;
-    bool shutdown;
-    pthread_mutex_t lock;
-    pthread_cond_t empty, fill;
-};
+/**
+ * @brief Standard insertion sort that is faster than merge sort for small array's
+ *
+ * @param A The array to sort
+ * @param p The starting index
+ * @param r The ending index
+ */
+static void insertion_sort(int A[], int p, int r)
+{
+  int j;
 
-queue_t queue_init(int capacity) {
-    queue_t queue = (queue_t) malloc(sizeof(struct queue));
-    queue->arr = (void**) malloc((capacity) * sizeof(void*));
-    queue->capacity = capacity;
-    queue->size = 0;
-    queue->head= 0;
-    queue->tail= 0;
-    queue->shutdown = false;
-
-    pthread_mutex_init(&(queue->lock), NULL);
-    pthread_cond_init(&(queue->empty), NULL);
-    pthread_cond_init(&(queue->fill), NULL);
-
-    return queue;
-
-    return queue;
+  for (j = p + 1; j <= r; j++)
+    {
+      int key = A[j];
+      int i = j - 1;
+      while ((i > p - 1) && (A[i] > key))
+        {
+	  A[i + 1] = A[i];
+	  i--;
+        }
+      A[i + 1] = key;
+    }
 }
 
-void queue_destroy(queue_t q) {
-    pthread_mutex_destroy(&(q->lock));
-    pthread_cond_destroy(&(q->empty));
-    pthread_cond_destroy(&(q->fill));
 
-    free(q->arr);
-    free(q);
-}
-
-void enqueue(queue_t q, void *data) {
-    pthread_mutex_lock(&(q->lock));
-    while (q->size == q->capacity) {
-        pthread_cond_wait(&(q->empty), &(q->lock));
+void mergesort_s(int A[], int p, int r)
+{
+  if (r - p + 1 <=  INSERTION_SORT_THRESHOLD)
+    {
+      insertion_sort(A, p, r);
+    }
+  else
+    {
+      int q = (p + r) / 2;
+      mergesort_s(A, p, q);
+      mergesort_s(A, q + 1, r);
+      merge_s(A, p, q, r);
     }
 
-    q->arr[q->tail] = data;
-    q->tail = (q->tail + 1) % q->capacity;
-    q->size++;
-
-    pthread_cond_broadcast(&(q->fill));
-    pthread_mutex_unlock(&(q->lock));
 }
 
-void *dequeue(queue_t q) {
-    pthread_mutex_lock(&(q->lock));
-    while (q->size == 0 && !q->shutdown) {
-        pthread_cond_wait(&(q->fill), &(q->lock));
+void merge_s(int A[], int p, int q, int r)
+{
+  int *B = (int *)malloc(sizeof(int) * (r - p + 1));
+
+  int i = p;
+  int j = q + 1;
+  int k = 0;
+  int l;
+
+  /* as long as both lists have unexamined elements */
+  /*  this loop keeps executing. */
+  while ((i <= q) && (j <= r))
+    {
+      if (A[i] < A[j])
+        {
+	  B[k] = A[i];
+	  i++;
+        }
+      else
+        {
+	  B[k] = A[j];
+	  j++;
+        }
+      k++;
     }
 
-    void* data = q->arr[q->head];
-    if (q->size == 0) {
-        data = NULL;
-    } else  {
-        q->head = (q->head + 1) % q->capacity;
-        q->size--;
+  /* now only at most one list has unprocessed elements. */
+  if (i <= q)
+    {
+      /* copy remaining elements from the first list */
+      for (l = i; l <= q; l++)
+        {
+	  B[k] = A[l];
+	  k++;
+        }
+    }
+  else
+    {
+      /* copy remaining elements from the second list */
+      for (l = j; l <= r; l++)
+        {
+	  B[k] = A[l];
+	  k++;
+        }
     }
 
-    pthread_cond_broadcast(&(q->empty));
-    pthread_mutex_unlock(&(q->lock));
-    return data;
+  /* copy merged output from array B back to array A */
+  k = 0;
+  for (l = p; l <= r; l++)
+    {
+      A[l] = B[k];
+      k++;
+    }
+
+  free(B);
 }
 
-void queue_shutdown(queue_t q) {
-    pthread_mutex_lock(&(q->lock));
-
-    q->shutdown = true; 
-    pthread_cond_broadcast(&(q->fill));
-
-    pthread_mutex_unlock(&(q->lock));
-}
-
-bool is_empty(queue_t q) {
-    pthread_mutex_lock(&(q->lock));
-
-    bool empty = q->size == 0;
-
-    pthread_mutex_unlock(&(q->lock));
-
-    return empty;
-}
-
-bool is_shutdown(queue_t q) {
-    pthread_mutex_lock(&(q->lock));
-
-    bool shutdown = q->shutdown;
-
-    pthread_mutex_unlock(&(q->lock));
-
-    return shutdown;
+double getMilliSeconds()
+{
+  struct timeval now;
+  gettimeofday(&now, (struct timezone *)0);
+  return (double)now.tv_sec * 1000.0 + now.tv_usec / 1000.0;
 }
