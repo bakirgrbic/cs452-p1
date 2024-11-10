@@ -1,5 +1,5 @@
 ## Analysis
-* Were you able to generate something close to what the example showed? Why or why not.
+### Were you able to generate something close to what the example showed? Why or why not.
 Yes, I was able to generate something close to what the example showed. I ended
 up generating two graphs, one in low power mode and the other without this 
 feature enabled. I did this because I keep my Mac in low power mode to conserve
@@ -26,7 +26,7 @@ day to day computing.
 
 ![Normal modegraph](./student_plot.png)
 
-* Did you see a slow down at some point why or why not?
+### Did you see a slow down at some point why or why not?
 Both modes had a similar trend of slowing down time to sort after increasing
 thread number past 9 threads. This appears to be the threshold for 
 my computer before overhead costs for context switching outweighs benefits
@@ -40,16 +40,16 @@ graph (second) had a smoother linear trend when compared to the low power mode.
 Interestingly, the other parts of both graphs are very similar and do not show
 any changes other than this slow down section.
  
-* Did your program run faster and faster when you added more threads? Why or why not?
+### Did your program run faster and faster when you added more threads? Why or why not?
 My program did run faster and faster up to reaching 9 threads in both modes. 
 This is because adding more threads allowed for more chunks of the array to
 be sorted in parallel even with the additional overhead costs of context 
 switching between threads.
  
-* What was the optimum number of threads for your machine?
+### What was the optimum number of threads for your machine?
 The optimum number of threads for my machine in both low power and normal mode
 is 9 threads.
  
-* What was the slowest number of threads for your machine?
+### What was the slowest number of threads for your machine?
 The slowest number of threads for my machine in both low power and normal mode
 is 1 thread. 
