@@ -22,7 +22,7 @@ predecessor. It was interesting to see that there is a tradeoff my computer
 has when running in low power mode even though I tend to not notice it in my
 day to day computing.
 
-![Low power mode graph](./student_plot_power_save.png)
+![Low power mode graph](./student_plot_power_saver.png)
 
 ![Normal modegraph](./student_plot.png)
 
