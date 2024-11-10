@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <sys/time.h> /* for gettimeofday system call */
 #include "lab.h"
@@ -105,4 +106,82 @@ double getMilliSeconds()
   struct timeval now;
   gettimeofday(&now, (struct timezone *)0);
   return (double)now.tv_sec * 1000.0 + now.tv_usec / 1000.0;
+}
+
+void mergesort_mt(int *A, int n, int num_thread) {
+    int threads_used = num_thread;
+    int chunk_size = 0;
+    int extra_pieces = 0;
+    int start = 0;
+    int end = 0;
+    int middle = 0;
+    struct parallel_args** thread_args;
+
+    if (threads_used > MAX_THREADS) {
+        threads_used = MAX_THREADS;
+    }
+
+    if (threads_used > n) {
+        fprintf(stderr, "Number of threads used exceeded size of array\n");
+        exit(2);
+    }
+
+    chunk_size = n / threads_used;
+    extra_pieces = n % threads_used;
+
+    // Split A into chunks for all threads
+    thread_args = (struct parallel_args**) malloc(threads_used * sizeof(struct parallel_args*));
+    for (int i = 0; i < threads_used; i++) {
+        thread_args[i] = (struct parallel_args*) malloc(sizeof(struct parallel_args));
+        thread_args[i]->A = A;
+        thread_args[i]->start = start;
+
+        end += chunk_size - 1;
+        if (extra_pieces > 0) {
+            end++;
+            extra_pieces--;
+        }
+
+        thread_args[i]->end = end;
+
+        start = end + 1;
+        end = start;
+    }
+
+    // Create threads and have them call parallel_mergesort 
+    for (int i = 0; i < threads_used; i++) {
+        pthread_create(&(thread_args[i]->tid), NULL, parallel_mergesort, thread_args[i]);
+    }
+
+    // Wait on all threads to finish before master merge
+    for (int i = 0; i < threads_used; i++) {
+        pthread_join(thread_args[i]->tid, NULL);
+    }
+
+    // Merge all results
+    for (int i = 1; i < threads_used; i++) {
+        start = thread_args[i-1]->start;
+        middle = thread_args[i-1]->end;
+        end = thread_args[i]->end;
+        merge_s(A, start, middle, end);
+
+        thread_args[i]->start = start;
+        thread_args[i]->end = end;
+    }
+
+    for (int i = 0; i < threads_used; i++) {
+        free(thread_args[i]);
+    }
+    free(thread_args);
+}
+
+void *parallel_mergesort(void *args) {
+    struct parallel_args* my_args = (struct parallel_args*) args;
+    int *A = my_args->A;
+    int start = my_args->start;
+    int end = my_args->end;
+
+    mergesort_s(A, start, end);
+ 
+    return NULL;
 }
